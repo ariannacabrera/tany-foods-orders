@@ -35,7 +35,7 @@ ADMIN_PASSWORD = "admin123"
 
 def load_logo():
     """Load the Tany Foods logo"""
-    logo_path = "Arianna/Downloads/Tany Foods Logo.png"
+    logo_path = "ariannacabrera/Downloads/Tany Foods Logo.png"
     if os.path.exists(logo_path):
         return Image.open(logo_path)
     return None
