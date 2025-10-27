@@ -332,34 +332,6 @@ def cart_page():
     if not st.session_state.cart:
         st.info("Your cart is empty. Start shopping!")
         return
-    
-    # Display cart items
-    st.subheader(f"Items in Cart: {len(st.session_state.cart)}")
-    
-    for cart_key, item in list(st.session_state.cart.items()):
-        col1, col2, col3, col4, col5 = st.columns([2, 3, 1, 1, 1])
-        
-        with col1:
-            st.write(f"**{item['item_code']}**")
-        with col2:
-            st.write(item['description'])
-        with col3:
-            st.write(f"UOM: {item['uom']}")
-        with col4:
-            new_qty = st.number_input(
-                "Qty", 
-                min_value=1, 
-                value=item['quantity'], 
-                key=f"cart_qty_{cart_key}"
-            )
-            if new_qty != item['quantity']:
-                st.session_state.cart[cart_key]['quantity'] = new_qty
-        with col5:
-            if st.button("🗑️", key=f"remove_{cart_key}"):
-                del st.session_state.cart[cart_key]
-                st.rerun()
-        
-        st.markdown("---")
 
     # Display cart items
     st.subheader(f"Items in Cart: {len(st.session_state.cart)}")
