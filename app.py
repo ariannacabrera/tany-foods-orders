@@ -15,18 +15,24 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-/* Only the wrapped Send Order button */
+/* Be very specific so we beat Streamlit theme rules */
+div.send-order div.stButton > button,
+div.send-order button[data-testid="baseButton-secondary"],
+div.send-order button[kind="secondary"],
 div.send-order button {
-  background-color: #28a745 !important;   /* green */
-  color: white !important;
+  background-color: #28a745 !important;  /* green */
+  color: #ffffff !important;
   border: 1px solid #1e7e34 !important;
+  box-shadow: none !important;
 }
+div.send-order div.stButton > button:hover,
+div.send-order button[data-testid="baseButton-secondary"]:hover,
+div.send-order button[kind="secondary"]:hover,
 div.send-order button:hover {
   filter: brightness(0.95);
 }
 </style>
 """, unsafe_allow_html=True)
-
 
 # Initialize session state
 if 'logged_in' not in st.session_state:
