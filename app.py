@@ -247,30 +247,6 @@ def product_detail_page():
             key=f"uom_{pid}"
         )
 
-        # Quantity
-        qty_key = f"qty_{pid}"
-        if qty_key not in st.session_state:
-            st.session_state[qty_key] = 1
-
-        c1, c2, c3 = st.columns([1, 2, 1])
-        with c1:
-            if st.button("➖", key=f"minus_{pid}"):
-                if st.session_state[qty_key] > 1:
-                    st.session_state[qty_key] -= 1
-                    st.rerun()
-        with c2:
-            qty = st.number_input(
-                "Quantity",
-                min_value=1,
-                value=st.session_state[qty_key],
-                key=f"qty_input_{pid}"
-            )
-            st.session_state[qty_key] = qty
-        with c3:
-            if st.button("➕", key=f"plus_{pid}"):
-                st.session_state[qty_key] += 1
-                st.rerun()
-
         # ✅ Give this a unique key
         if st.button("🛒 Add to Cart", use_container_width=True, key=f"add_to_cart_{pid}"):
             cart_key = f"{product['item_code']}_{selected_uom}"
