@@ -190,25 +190,41 @@ def product_catalog_page():
                     
                     if st.button(f"View Details", key=f"view_{product['item_code']}"):
                         st.session_state.selected_product = product
-                        st.session_state.show_product_detail = True
+                        st.session_state.current_page = 'product_detail'
+                        st.session_state.temp_qty = 1
                         st.rerun()
-    
-    # Product detail modal
-    if st.session_state.get('show_product_detail', False):
-        show_product_detail()
+    st.markdown("---")
+    st.caption(f"Showing {len(filtered_products)} products")
 
 def show_product_detail():
-    """Show product detail modal"""
+    """Show product detail page"""
     product = st.session_state.selected_product
     
-    st.markdown("---")
-    st.subheader(f"Product Details: {product.get('item_code')}")
+    # Back button
+    if st.button("← Back to Catalog"):
+        st.session_state.current_page = 'catalog'
+        st.session_state.selected_product = None
+        st.session_state.temp_qty = 1
+        st.rerun()
     
-    col1, col2 = st.columns(2)
+    st.title("🍽️ Product Details")
+    st.markdown("---")
+    
+    col1, col2 = st.columns([1, 1])
+    
+    with col2:
+        if product.get('image_path') and os.path.exists(product['image_path']):
+            st.image(product['image_path'], use_column_width=True)
+        else:
+            st.image("https://via.placeholder.com/400", use_column_width=True)
     
     with col1:
-        st.write(f"""**Description:** {product.get('description')}""")
-        st.write(f"""**Category:** {product.get('category', 'N/A')}""")
+        st.subheader(product.get('item_code'))
+        st.markdown(f"### {product.get('description')}")
+        if product.get('brand'):
+            st.markdown(f"**Brand:** {product.get('brand')}")
+        st.markdown(f"**Category:** {product.get('category', 'N/A')}")
+        st.markdown("---")
         
         # Unit of measure selection
         uom_options = []
@@ -219,13 +235,11 @@ def show_product_detail():
         
         if not uom_options:
             st.warning("This product is not available for purchase")
-            if st.button("Close"):
-                st.session_state.show_product_detail = False
-                st.rerun()
             return
         
-        selected_uom = st.selectbox("Unit of Measure", uom_options)
+        selected_uom = st.selectbox("Select Unit of Measure", uom_options, key="uom_select")
         
+        st.markdown("**Select Quantity:**")
         # Quantity selector
         col_minus, col_qty, col_plus = st.columns([1, 2, 1])
         
@@ -247,11 +261,8 @@ def show_product_detail():
                 st.session_state.temp_qty += 1
                 st.rerun()
     
-    with col2:
-        if product.get('image_path') and os.path.exists(product['image_path']):
-            st.image(product['image_path'], use_container_width=True)
-        else:
-            st.image("https://via.placeholder.com/300", use_container_width=True)
+    st.markdown("---")
+
     
     # Add to cart button
     col_add, col_close = st.columns(2)
