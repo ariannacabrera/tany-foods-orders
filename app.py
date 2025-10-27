@@ -343,7 +343,8 @@ def cart_page():
             st.write(item.get('uom', ''))
         with c5:
             new_qty = st.number_input(
-                "Qty",
+                label="",                
+                label_visibility="collapsed",  
                 min_value=1,
                 step=1,
                 value=int(item['quantity']),
@@ -355,8 +356,6 @@ def cart_page():
             if st.button("🗑️ Remove", key=f"remove_{cart_key}", use_container_width=True):
                 del st.session_state.cart[cart_key]
                 st.rerun()
-        st.divider()
-
     
     # Send order button (green via CSS)
     st.markdown('<div class="send-order">', unsafe_allow_html=True)
