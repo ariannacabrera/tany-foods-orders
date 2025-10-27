@@ -288,14 +288,14 @@ def product_detail_page():
 
         # Give this a unique key
         if st.button("🛒 Add to Cart", use_container_width=True, key=f"add_to_cart_{pid}"):
-            cart_key = f"{product['item_code']}_{selected_uom}"
+            cart_key = product["item_code"] 
             if cart_key in st.session_state.cart:
                 st.warning("This item is already in your cart. Edit the quantity in the cart.")
             else:
                 st.session_state.cart[cart_key] = {
                     "item_code": product["item_code"],
                     "description": product["description"],
-                    "brand": product.get("brand", "—"),  
+                    "brand": (product.get("brand") or "").strip(),
                     "uom": selected_uom,
                     "quantity": int(st.session_state[qty_key]),
                 }
