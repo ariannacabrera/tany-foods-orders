@@ -34,6 +34,11 @@ div.send-order button:hover {
 </style>
 """, unsafe_allow_html=True)
 
+# helper to reduce space
+def ellipsize(text: str, max_chars: int = 28) -> str:
+    text = str(text or "")
+    return (text[:max_chars-1] + "…") if len(text) > max_chars else text
+
 # Initialize session state
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
@@ -354,7 +359,7 @@ def cart_page():
             st.write(f"**{item['item_code']}**")
     
         with c2:
-            st.write(item['description'])
+            st.write(ellipsize(item.get('description', ''), max_chars=28))
     
         with c3:
             st.write(item['uom'])
