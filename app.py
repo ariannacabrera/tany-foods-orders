@@ -286,7 +286,7 @@ def product_detail_page():
         )
         st.session_state[qty_key] = qty
 
-        # ✅ Give this a unique key
+        # Give this a unique key
         if st.button("🛒 Add to Cart", use_container_width=True, key=f"add_to_cart_{pid}"):
             cart_key = f"{product['item_code']}_{selected_uom}"
             if cart_key in st.session_state.cart:
@@ -295,37 +295,11 @@ def product_detail_page():
                 st.session_state.cart[cart_key] = {
                     "item_code": product["item_code"],
                     "description": product["description"],
+                    "brand": product.get("brand", "—"),  
                     "uom": selected_uom,
                     "quantity": int(st.session_state[qty_key]),
                 }
-                st.success("Added to cart!")
-
-    # Add to cart button
-    col_add, col_close = st.columns(2)
-    with col_add:
-        if st.button("🛒 Add to Cart", use_container_width=True):
-            cart_key = f"{product['item_code']}_{selected_uom}"
-            
-            if cart_key in st.session_state.cart:
-                st.warning("⚠️ This item is already in your cart! You can edit the quantity in the cart page.")
-            else:
-                st.session_state.cart[cart_key] = {
-                    'item_code': product['item_code'],
-                    'description': product['description'],
-                    'brand': product.get('brand',''),
-                    'uom': selected_uom,
-                    'quantity': st.session_state.temp_qty
-                }
                 st.success("✅ Added to cart!")
-                st.session_state.temp_qty = 1
-                st.session_state.show_product_detail = False
-                st.rerun()
-    
-    with col_close:
-        if st.button("Close", use_container_width=True):
-            st.session_state.show_product_detail = False
-            st.session_state.temp_qty = 1
-            st.rerun()
 
 def cart_page():
     """Shopping cart page"""
@@ -343,9 +317,9 @@ def cart_page():
     st.subheader(f"Items in Cart: {len(st.session_state.cart)}")
     
     # Column widths: Item, Description, Brand, UOM, Qty, Action
-    COLS = [2, 2, 1, 1, 1, 1]
-    
-    # ---- header row ----
+    COLS = [1.5, 3, 1.5, 1, 1, 1]   # description gets more room
+
+    # Header
     h1, h2, h3, h4, h5, h6 = st.columns(COLS)
     with h1: st.markdown("**Item**")
     with h2: st.markdown("**Description**")
@@ -355,30 +329,21 @@ def cart_page():
     with h6: st.markdown("**Action**")
     st.divider()
     
-    # small helper to shorten text nicely (if you haven't added it yet)
-    def ellipsize(text: str, max_chars: int = 28) -> str:
-        text = str(text or "")
-        return (text[:max_chars-1] + "…") if len(text) > max_chars else text
-    
-    # ---- rows ----
+    # Rows
     for cart_key, item in list(st.session_state.cart.items()):
         c1, c2, c3, c4, c5, c6 = st.columns(COLS, gap="small")
     
         with c1:
             st.markdown(f"**{item.get('item_code','')}**")
-    
         with c2:
-            st.write(ellipsize(item.get('description', ''), max_chars=28))
-    
+            st.write(ellipsize(item.get('description', ''), max_chars=40))  # more chars fit now
         with c3:
-            st.write(ellipsize(item.get('brand', '—'), max_chars=14))  # ← BRAND here
-    
+            st.write(item.get('brand', '—'))
         with c4:
             st.write(item.get('uom', ''))
-    
         with c5:
             new_qty = st.number_input(
-                label="Qty",
+                "Qty",
                 min_value=1,
                 step=1,
                 value=int(item['quantity']),
@@ -386,12 +351,10 @@ def cart_page():
             )
             if new_qty != item['quantity']:
                 st.session_state.cart[cart_key]['quantity'] = new_qty
-    
         with c6:
             if st.button("🗑️ Remove", key=f"remove_{cart_key}", use_container_width=True):
                 del st.session_state.cart[cart_key]
                 st.rerun()
-    
         st.divider()
 
     
