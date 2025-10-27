@@ -198,22 +198,24 @@ def product_detail_page():
     product = st.session_state.get('selected_product')
     if not product:
         st.warning("No product selected.")
-        if st.button("← Back to Catalog", use_container_width=True):
+        if st.button("← Back to Catalog", use_container_width=True, key="back_no_product"):
             st.session_state.current_page = 'catalog'
             st.rerun()
         return
 
-    # Top bar: Back, title, Cart
+    pid = product.get('item_code', 'unknown').replace(' ', '_')
+
+    # Top bar
     left, mid, right = st.columns([1, 4, 1])
     with left:
-        if st.button("← Back to Catalog", use_container_width=True):
+        if st.button("← Back to Catalog", use_container_width=True, key=f"back_{pid}"):
             st.session_state.current_page = 'catalog'
             st.rerun()
     with mid:
         st.title(f"Product: {product.get('item_code')}")
         st.caption(product.get('description', ''))
     with right:
-        if st.button("🛒 View Cart", use_container_width=True):
+        if st.button("🛒 View Cart", use_container_width=True, key=f"view_cart_{pid}"):
             st.session_state.current_page = 'cart'
             st.rerun()
 
@@ -230,30 +232,29 @@ def product_detail_page():
         if product.get('brand'):
             st.markdown(f"**Brand:** {product.get('brand')}")
 
-        # UOM options
+        # UOM
         uom_options = []
-        if product.get('allow_case', True):
-            uom_options.append("Case")
-        if product.get('allow_each', True):
-            uom_options.append("Each")
+        if product.get('allow_case', True): uom_options.append("Case")
+        if product.get('allow_each', True): uom_options.append("Each")
         if not uom_options:
             st.error("This product is not available for purchase.")
             return
+
         selected_uom = st.radio(
             "Unit of Measure",
             uom_options,
             horizontal=True,
-            key=f"uom_{product.get('item_code')}"
+            key=f"uom_{pid}"
         )
 
-        # Quantity (scoped per product)
-        qty_key = f"qty_{product.get('item_code')}"
+        # Quantity
+        qty_key = f"qty_{pid}"
         if qty_key not in st.session_state:
             st.session_state[qty_key] = 1
 
         c1, c2, c3 = st.columns([1, 2, 1])
         with c1:
-            if st.button("➖", key=f"minus_{product.get('item_code')}"):
+            if st.button("➖", key=f"minus_{pid}"):
                 if st.session_state[qty_key] > 1:
                     st.session_state[qty_key] -= 1
                     st.rerun()
@@ -262,15 +263,16 @@ def product_detail_page():
                 "Quantity",
                 min_value=1,
                 value=st.session_state[qty_key],
-                key=f"qty_input_{product.get('item_code')}"
+                key=f"qty_input_{pid}"
             )
             st.session_state[qty_key] = qty
         with c3:
-            if st.button("➕", key=f"plus_{product.get('item_code')}"):
+            if st.button("➕", key=f"plus_{pid}"):
                 st.session_state[qty_key] += 1
                 st.rerun()
 
-        if st.button("🛒 Add to Cart", use_container_width=True):
+        # ✅ Give this a unique key
+        if st.button("🛒 Add to Cart", use_container_width=True, key=f"add_to_cart_{pid}"):
             cart_key = f"{product['item_code']}_{selected_uom}"
             if cart_key in st.session_state.cart:
                 st.warning("This item is already in your cart. Edit the quantity in the cart.")
