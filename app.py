@@ -247,9 +247,10 @@ def product_detail_page():
             key=f"uom_{pid}"
         )
 
+        # Quantity
         qty_key = f"qty_{pid}"  # or f"qty_{product.get('item_code')}"
-            if qty_key not in st.session_state:
-        st.session_state[qty_key] = 1
+        if qty_key not in st.session_state:
+            st.session_state[qty_key] = 1
 
         qty = st.number_input(
             "Quantity",
@@ -257,7 +258,7 @@ def product_detail_page():
             value=st.session_state[qty_key],
             key=f"qty_input_{pid}"
         )
-st.session_state[qty_key] = qty
+        st.session_state[qty_key] = qty
 
         # ✅ Give this a unique key
         if st.button("🛒 Add to Cart", use_container_width=True, key=f"add_to_cart_{pid}"):
