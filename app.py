@@ -335,7 +335,7 @@ def cart_page():
 
     # Display cart items
     st.subheader(f"Items in Cart: {len(st.session_state.cart)}")
-
+    
     # Header row (labels only)
     h1, h2, h3, h4, h5 = st.columns([2, 3, 1, 1, 1])
     with h1: st.markdown("**Item**")
@@ -346,38 +346,39 @@ def cart_page():
     
     st.markdown("---")
 
-    # One block per cart item
+    # One row per cart item (stack controls inside the same columns)
     for cart_key, item in list(st.session_state.cart.items()):
-        # Values row (no inputs here)
-        r1c1, r1c2, r1c3, r1c4, r1c5 = st.columns([2, 3, 1, 1, 1])
-        with r1c1:
-            st.write(f"**{item['item_code']}**")
-        with r1c2:
-            st.write(item['description'])
-        with r1c3:
-            st.write(item['uom'])
-        with r1c4:
-            st.write("")  # label row already shows "Qty"
-        with r1c5:
-            st.write("")  # action goes on next line with the input
+        c1, c2, c3, c4, c5 = st.columns([2, 3, 1, 1, 1])
     
-        # Input row (put the number input under the Qty header)
-        r2c1, r2c2, r2c3, r2c4, r2c5 = st.columns([2, 3, 1, 1, 1])
-        with r2c4:
+        with c1:
+            st.write(f"**{item['item_code']}**")
+    
+        with c2:
+            st.write(item['description'])
+    
+        with c3:
+            st.write(item['uom'])
+    
+        with c4:
+            # spacer so the input sits under the header, not inline with values
+            st.markdown("&nbsp;", unsafe_allow_html=True)
             new_qty = st.number_input(
-                " ",  # empty label so it stays under the Qty header
+                label="",           # no label; keeps it directly under "Qty"
                 min_value=1,
                 value=item['quantity'],
                 key=f"cart_qty_{cart_key}"
             )
             if new_qty != item['quantity']:
                 st.session_state.cart[cart_key]['quantity'] = new_qty
-        with r2c5:
+    
+        with c5:
+            st.markdown("&nbsp;", unsafe_allow_html=True)
             if st.button("🗑️ Remove", key=f"remove_{cart_key}"):
                 del st.session_state.cart[cart_key]
                 st.rerun()
     
         st.markdown("---")
+
     
     # Send order button (green via CSS)
     st.markdown('<div class="send-order">', unsafe_allow_html=True)
