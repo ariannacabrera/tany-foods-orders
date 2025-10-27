@@ -13,6 +13,21 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# "Send Order" button green
+st.markdown("""
+<style>
+div.send-order button[kind="primary"] {
+  background-color: #28a745 !important;  /* green */
+  color: white !important;
+  border: 1px solid #1e7e34 !important;
+}
+div.send-order button[kind="primary"]:hover {
+  filter: brightness(0.95);
+}
+</style>
+""", unsafe_allow_html=True)
+
+
 # Initialize session state
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
@@ -340,10 +355,12 @@ def cart_page():
         
         st.markdown("---")
     
-    # Send order button
-    if st.button("📤 Send Order", type="primary", use_container_width=True):
+    # Send order button (green via CSS)
+    st.markdown('<div class="send-order">', unsafe_allow_html=True)
+    if st.button("📤 Send Order", type="primary", use_container_width=True, key="send_order"):
         st.session_state.show_order_confirmation = True
         st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
     
     # Order confirmation modal
     if st.session_state.get('show_order_confirmation', False):
