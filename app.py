@@ -193,7 +193,7 @@ def product_catalog_page():
                         st.session_state.current_page = 'product_detail'
                         st.rerun()
 
-    def product_detail_page():
+def product_detail_page():
     """Dedicated product detail page with back navigation"""
     product = st.session_state.get('selected_product')
     if not product:
