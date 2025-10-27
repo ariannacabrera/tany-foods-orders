@@ -358,7 +358,7 @@ def submit_order():
 
 def admin_dashboard():
     """Admin dashboard"""
-    st.title("📊 Admin Dashboard - Tany Foods Orders")
+    st.title("Admin Dashboard - Tany Foods Orders")
     
     tab1, tab2 = st.tabs(["📦 Orders Management", "📋 Product Management"])
     
