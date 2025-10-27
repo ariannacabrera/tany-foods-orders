@@ -191,79 +191,98 @@ def product_catalog_page():
                     if st.button(f"View Details", key=f"view_{product['item_code']}"):
                         st.session_state.selected_product = product
                         st.session_state.current_page = 'product_detail'
-                        st.session_state.temp_qty = 1
                         st.rerun()
-    st.markdown("---")
-    st.caption(f"Showing {len(filtered_products)} products")
 
-def show_product_detail():
-    """Show product detail page"""
-    product = st.session_state.selected_product
-    
-    # Back button
-    if st.button("← Back to Catalog"):
-        st.session_state.current_page = 'catalog'
-        st.session_state.selected_product = None
-        st.session_state.temp_qty = 1
-        st.rerun()
-    
-    st.title("🍽️ Product Details")
-    st.markdown("---")
-    
-    col1, col2 = st.columns([1, 1])
-    
-    with col2:
-        if product.get('image_path') and os.path.exists(product['image_path']):
-            st.image(product['image_path'], use_column_width=True)
-        else:
-            st.image("https://via.placeholder.com/400", use_column_width=True)
-    
+    def product_detail_page():
+    """Dedicated product detail page with back navigation"""
+    product = st.session_state.get('selected_product')
+    if not product:
+        st.warning("No product selected.")
+        if st.button("← Back to Catalog", use_container_width=True):
+            st.session_state.current_page = 'catalog'
+            st.rerun()
+        return
+
+    # Top bar: Back, title, Cart
+    left, mid, right = st.columns([1, 4, 1])
+    with left:
+        if st.button("← Back to Catalog", use_container_width=True):
+            st.session_state.current_page = 'catalog'
+            st.rerun()
+    with mid:
+        st.title(f"Product: {product.get('item_code')}")
+        st.caption(product.get('description', ''))
+    with right:
+        if st.button("🛒 View Cart", use_container_width=True):
+            st.session_state.current_page = 'cart'
+            st.rerun()
+
+    # Body
+    col1, col2 = st.columns([2, 1])
     with col1:
-        st.subheader(product.get('item_code'))
-        st.markdown(f"### {product.get('description')}")
+        if product.get('image_path') and os.path.exists(product['image_path']):
+            st.image(product['image_path'], use_container_width=True)
+        else:
+            st.image("https://via.placeholder.com/600x400", use_container_width=True)
+
+    with col2:
+        st.markdown(f"**Category:** {product.get('category', 'N/A')}")
         if product.get('brand'):
             st.markdown(f"**Brand:** {product.get('brand')}")
-        st.markdown(f"**Category:** {product.get('category', 'N/A')}")
-        st.markdown("---")
-        
-        # Unit of measure selection
+
+        # UOM options
         uom_options = []
         if product.get('allow_case', True):
             uom_options.append("Case")
         if product.get('allow_each', True):
             uom_options.append("Each")
-        
         if not uom_options:
-            st.warning("This product is not available for purchase")
+            st.error("This product is not available for purchase.")
             return
-        
-        selected_uom = st.selectbox("Select Unit of Measure", uom_options, key="uom_select")
-        
-        st.markdown("**Select Quantity:**")
-        # Quantity selector
-        col_minus, col_qty, col_plus = st.columns([1, 2, 1])
-        
-        if 'temp_qty' not in st.session_state:
-            st.session_state.temp_qty = 1
-        
-        with col_minus:
-            if st.button("➖", key="minus"):
-                if st.session_state.temp_qty > 1:
-                    st.session_state.temp_qty -= 1
-                    st.rerun()
-        
-        with col_qty:
-            qty_input = st.number_input("Quantity", min_value=1, value=st.session_state.temp_qty, key="qty_input")
-            st.session_state.temp_qty = qty_input
-        
-        with col_plus:
-            if st.button("➕", key="plus"):
-                st.session_state.temp_qty += 1
-                st.rerun()
-    
-    st.markdown("---")
+        selected_uom = st.radio(
+            "Unit of Measure",
+            uom_options,
+            horizontal=True,
+            key=f"uom_{product.get('item_code')}"
+        )
 
-    
+        # Quantity (scoped per product)
+        qty_key = f"qty_{product.get('item_code')}"
+        if qty_key not in st.session_state:
+            st.session_state[qty_key] = 1
+
+        c1, c2, c3 = st.columns([1, 2, 1])
+        with c1:
+            if st.button("➖", key=f"minus_{product.get('item_code')}"):
+                if st.session_state[qty_key] > 1:
+                    st.session_state[qty_key] -= 1
+                    st.rerun()
+        with c2:
+            qty = st.number_input(
+                "Quantity",
+                min_value=1,
+                value=st.session_state[qty_key],
+                key=f"qty_input_{product.get('item_code')}"
+            )
+            st.session_state[qty_key] = qty
+        with c3:
+            if st.button("➕", key=f"plus_{product.get('item_code')}"):
+                st.session_state[qty_key] += 1
+                st.rerun()
+
+        if st.button("🛒 Add to Cart", use_container_width=True):
+            cart_key = f"{product['item_code']}_{selected_uom}"
+            if cart_key in st.session_state.cart:
+                st.warning("This item is already in your cart. Edit the quantity in the cart.")
+            else:
+                st.session_state.cart[cart_key] = {
+                    "item_code": product["item_code"],
+                    "description": product["description"],
+                    "uom": selected_uom,
+                    "quantity": int(st.session_state[qty_key]),
+                }
+                st.success("Added to cart!")
+
     # Add to cart button
     col_add, col_close = st.columns(2)
     with col_add:
@@ -495,6 +514,8 @@ def main():
                 product_catalog_page()
             elif st.session_state.current_page == 'cart':
                 cart_page()
+            elif st.session_state.current_page == 'product_detail':  # NEW
+                product_detail_page()
 
 if __name__ == "__main__":
     main()
