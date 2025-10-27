@@ -312,6 +312,7 @@ def product_detail_page():
                 st.session_state.cart[cart_key] = {
                     'item_code': product['item_code'],
                     'description': product['description'],
+                    'brand': product.get('brand',''),
                     'uom': selected_uom,
                     'quantity': st.session_state.temp_qty
                 }
@@ -341,46 +342,43 @@ def cart_page():
     # Display cart items
     st.subheader(f"Items in Cart: {len(st.session_state.cart)}")
     
-    # --- optional: small layout polish ---
-    st.markdown("""
-    <style>
-    .cart-header p { margin-bottom: 0.25rem; font-weight: 700; }
-    .cart-row      { padding: .15rem 0 .35rem 0; }
-    </style>
-    """, unsafe_allow_html=True)
+    # Column widths: Item, Description, Brand, UOM, Qty, Action
+    COLS = [2, 2, 1, 1, 1, 1]
     
-    # Column widths: Item, Description, UOM, Qty, Action
-    COLS = [2, 3, 1, 1, 1]
-    
-    # Header row (labels only)
-    h1, h2, h3, h4, h5 = st.columns(COLS)
-    with h1: st.markdown('<div class="cart-header">Item</div>', unsafe_allow_html=True)
-    with h2: st.markdown('<div class="cart-header">Description</div>', unsafe_allow_html=True)
-    with h3: st.markdown('<div class="cart-header">UOM</div>', unsafe_allow_html=True)
-    with h4: st.markdown('<div class="cart-header">Qty</div>', unsafe_allow_html=True)
-    with h5: st.markdown('<div class="cart-header">Action</div>', unsafe_allow_html=True)
+    # ---- header row ----
+    h1, h2, h3, h4, h5, h6 = st.columns(COLS)
+    with h1: st.markdown("**Item**")
+    with h2: st.markdown("**Description**")
+    with h3: st.markdown("**Brand**")
+    with h4: st.markdown("**UOM**")
+    with h5: st.markdown("**Qty**")
+    with h6: st.markdown("**Action**")
     st.divider()
     
-    # One row per cart item (everything in the same columns so it lines up)
+    # small helper to shorten text nicely (if you haven't added it yet)
+    def ellipsize(text: str, max_chars: int = 28) -> str:
+        text = str(text or "")
+        return (text[:max_chars-1] + "…") if len(text) > max_chars else text
+    
+    # ---- rows ----
     for cart_key, item in list(st.session_state.cart.items()):
-        c1, c2, c3, c4, c5 = st.columns(COLS, gap="small")
+        c1, c2, c3, c4, c5, c6 = st.columns(COLS, gap="small")
     
         with c1:
-            st.markdown(f"<div class='cart-row'><strong>{item['item_code']}</strong></div>", unsafe_allow_html=True)
+            st.markdown(f"**{item.get('item_code','')}**")
     
         with c2:
-            # shorten description a bit so Qty/Action fit nicely
-            desc = item.get('description', '')
-            desc = (desc[:34] + '…') if len(desc) > 35 else desc
-            st.markdown(f"<div class='cart-row'>{desc}</div>", unsafe_allow_html=True)
+            st.write(ellipsize(item.get('description', ''), max_chars=28))
     
         with c3:
-            st.markdown(f"<div class='cart-row'>{item.get('uom', '')}</div>", unsafe_allow_html=True)
+            st.write(ellipsize(item.get('brand', '—'), max_chars=14))  # ← BRAND here
     
         with c4:
+            st.write(item.get('uom', ''))
+    
+        with c5:
             new_qty = st.number_input(
-                label="",                 # keep label off; header shows "Qty"
-                label_visibility="collapsed",
+                label="Qty",
                 min_value=1,
                 step=1,
                 value=int(item['quantity']),
@@ -389,7 +387,7 @@ def cart_page():
             if new_qty != item['quantity']:
                 st.session_state.cart[cart_key]['quantity'] = new_qty
     
-        with c5:
+        with c6:
             if st.button("🗑️ Remove", key=f"remove_{cart_key}", use_container_width=True):
                 del st.session_state.cart[cart_key]
                 st.rerun()
