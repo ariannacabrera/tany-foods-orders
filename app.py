@@ -49,7 +49,7 @@ def signup_page():
     if logo:
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
-            st.image(logo, use_column_width=True)
+            st.image(logo, use_container_width=True)
     
     st.subheader("Create Your Account")
     
@@ -94,7 +94,7 @@ def login_page():
     if logo:
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
-            st.image(logo, use_column_width=True)
+            st.image(logo, use_container_width=True)
     
     st.subheader("Welcome Back!")
     
@@ -184,9 +184,9 @@ def product_catalog_page():
                     
                     # Display image if available
                     if product.get('image_path') and os.path.exists(product['image_path']):
-                        st.image(product['image_path'], use_column_width=True)
+                        st.image(product['image_path'], use_container_width=True)
                     else:
-                        st.image("https://via.placeholder.com/150", use_column_width=True)
+                        st.image("https://via.placeholder.com/150", use_container_width=True)
                     
                     if st.button(f"View Details", key=f"view_{product['item_code']}"):
                         st.session_state.selected_product = product
@@ -249,9 +249,9 @@ def show_product_detail():
     
     with col2:
         if product.get('image_path') and os.path.exists(product['image_path']):
-            st.image(product['image_path'], use_column_width=True)
+            st.image(product['image_path'], use_container_width=True)
         else:
-            st.image("https://via.placeholder.com/300", use_column_width=True)
+            st.image("https://via.placeholder.com/300", use_container_width=True)
     
     # Add to cart button
     col_add, col_close = st.columns(2)
