@@ -421,7 +421,7 @@ def admin_dashboard():
         # Upload product database
         st.write("**Upload Product Database (CSV/Excel)**")
         uploaded_file = st.file_uploader(
-            "Upload file with columns: item_code, description, category, allow_case, allow_each",
+            "Upload file with columns: item_code, description, brand, category, allow_case, allow_each",
             type=['csv', 'xlsx']
         )
         
@@ -439,6 +439,7 @@ def admin_dashboard():
                         'item_code': row.get('item_code', ''),
                         'description': row.get('description', ''),
                         'category': row.get('category', 'Uncategorized'),
+                        'brand': row.get('brand', ''),
                         'allow_case': row.get('allow_case', True),
                         'allow_each': row.get('allow_each', True),
                         'image_path': row.get('image_path', '')
