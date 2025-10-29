@@ -6,6 +6,8 @@ from datetime import datetime
 import os
 from PIL import Image
 from pathlib import Path
+from zoneinfo import ZoneInfo
+APP_TZ = os.getenv("APP_TIMEZONE", "America/Chicago")
 
 st.set_page_config(
     page_title="Tany Foods Orders",
@@ -507,19 +509,22 @@ def cart_page():
                 st.rerun()
 
 def submit_order():
-    """Submit the order"""
+    """Submit the order (timestamp in local timezone)"""
+    now_local = datetime.now(ZoneInfo(APP_TZ))
+    ts_str = now_local.strftime('%Y-%m-%d %H:%M:%S')
+
     order = {
-        'order_id': f"ORD-{datetime.now().strftime('%Y%m%d%H%M%S')}",
-        'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'order_id': f"ORD-{now_local.strftime('%Y%m%d%H%M%S')}",  # local time in ID
+        'timestamp': ts_str,
         'customer_name': f"{st.session_state.user_data['first_name']} {st.session_state.user_data['last_name']}",
         'company_name': st.session_state.user_data['company_name'],
         'email': st.session_state.user_data['email'],
-        'items': list(st.session_state.cart.values())
+        'items': list(st.session_state.cart.values()),
     }
-    
+
     st.session_state.orders_db.append(order)
     save_orders()
-    
+
     st.session_state.cart = {}
     st.session_state.show_order_confirmation = False
     st.success(f"✅ Order {order['order_id']} submitted successfully!")
