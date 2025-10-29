@@ -239,16 +239,30 @@ def product_catalog_page():
     if selected_category != "All":
         filtered_products = [p for p in filtered_products if p.get('category') == selected_category]
     
-    # Display image (supports Google Drive direct URLs or local paths)
-    img = product_image_src(product)
-    if img:
-        # show URL or local file if it exists; else fallback
-        if img.startswith("http") or os.path.exists(img):
-            st.image(img, use_container_width=True)
-        else:
-            st.image("https://via.placeholder.com/150", use_container_width=True)
+    # Display products
+    if not filtered_products:
+        st.info("No products found. Admin needs to upload product database.")
     else:
-        st.image("https://via.placeholder.com/150", use_container_width=True)
+        cols = st.columns(3)
+        for idx, product in enumerate(filtered_products):
+            with cols[idx % 3]:
+                with st.container():
+                    # Title + description
+                    st.markdown(f"**{product.get('item_code', 'N/A')}**")
+                    st.write(product.get('description', 'No description'))
+    
+                    # Image (URL or local path)
+                    img = product_image_src(product)
+                    if img and (img.startswith("http") or os.path.exists(img)):
+                        st.image(img, use_container_width=True)
+                    else:
+                        st.image("https://via.placeholder.com/150", use_container_width=True)
+    
+                    # View details button
+                    if st.button("View Details", key=f"view_{product.get('item_code','')}_{idx}"):
+                        st.session_state.selected_product = product
+                        st.session_state.current_page = 'product_detail'
+                        st.rerun()
 
 def product_detail_page():
     """Dedicated product detail page with back navigation"""
