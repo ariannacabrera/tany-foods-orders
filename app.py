@@ -93,8 +93,8 @@ def ellipsize(text: str, max_chars: int = 28) -> str:
     return (text[:max_chars-1] + "…") if len(text) > max_chars else text
 
 def product_image_src(p: dict) -> str:
-    # Prefer the Sheets column with the direct Drive URL; fall back to local path
-    return (p.get("image_url") or p.get("image_path") or "").strip()
+    # Prefer Sheets direct URL; fall back to local path; handle missing keys safely
+    return (str(p.get("image_url") or p.get("image_path") or "")).strip()
 
 # Admin credentials (hardcoded - in production, use environment variables)
 ADMIN_USERNAME = "admin"
