@@ -92,6 +92,10 @@ def ellipsize(text: str, max_chars: int = 28) -> str:
     text = str(text or "")
     return (text[:max_chars-1] + "…") if len(text) > max_chars else text
 
+def product_image_src(p: dict) -> str:
+    # Prefer the Sheets column with the direct Drive URL; fall back to local path
+    return (p.get("image_url") or p.get("image_path") or "").strip()
+
 # Admin credentials (hardcoded - in production, use environment variables)
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "admin123"
@@ -235,27 +239,16 @@ def product_catalog_page():
     if selected_category != "All":
         filtered_products = [p for p in filtered_products if p.get('category') == selected_category]
     
-    # Display products
-    if not filtered_products:
-        st.info("No products found. Admin needs to upload product database.")
+    # Display image (supports Google Drive direct URLs or local paths)
+    img = product_image_src(product)
+    if img:
+        # show URL or local file if it exists; else fallback
+        if img.startswith("http") or os.path.exists(img):
+            st.image(img, use_container_width=True)
+        else:
+            st.image("https://via.placeholder.com/150", use_container_width=True)
     else:
-        cols = st.columns(3)
-        for idx, product in enumerate(filtered_products):
-            with cols[idx % 3]:
-                with st.container():
-                    st.markdown(f"**{product.get('item_code', 'N/A')}**")
-                    st.write(product.get('description', 'No description'))
-                    
-                    # Display image if available
-                    if product.get('image_path') and os.path.exists(product['image_path']):
-                        st.image(product['image_path'], use_container_width=True)
-                    else:
-                        st.image("https://via.placeholder.com/150", use_container_width=True)
-                    
-                    if st.button(f"View Details", key=f"view_{product['item_code']}"):
-                        st.session_state.selected_product = product
-                        st.session_state.current_page = 'product_detail'
-                        st.rerun()
+        st.image("https://via.placeholder.com/150", use_container_width=True)
 
 def product_detail_page():
     """Dedicated product detail page with back navigation"""
@@ -286,8 +279,9 @@ def product_detail_page():
     # Body
     col1, col2 = st.columns([2, 1])
     with col1:
-        if product.get('image_path') and os.path.exists(product['image_path']):
-            st.image(product['image_path'], use_container_width=True)
+        img = product_image_src(product)
+        if img and (img.startswith("http") or os.path.exists(img)):
+            st.image(img, use_container_width=True)
         else:
             st.image("https://via.placeholder.com/600x400", use_container_width=True)
 
@@ -522,7 +516,7 @@ def admin_dashboard():
                         'brand': row.get('brand', ''),
                         'allow_case': row.get('allow_case', True),
                         'allow_each': row.get('allow_each', True),
-                        'image_path': row.get('image_path', '')
+                        'image_url': row.get('image_url', '') 
                     })
                 
                 st.session_state.products_db = products
