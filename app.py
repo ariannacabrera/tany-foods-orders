@@ -532,107 +532,107 @@ def admin_dashboard():
     
     tab1, tab2 = st.tabs(["📦 Orders Management", "📋 Product Management"])
     
-with tab1:
-    st.subheader("All Orders")
-
-    if not st.session_state.orders_db:
-        st.info("No orders received yet.")
-    else:
-        orders = st.session_state.orders_db
-
-        # ---- Build 1-row-per-order summary ----
-        summary_rows = []
-        for o in orders:
-            items = o.get("items", [])
-            item_count = len(items)
-            total_qty = sum(int(it.get("quantity", 0)) for it in items)
-
-            # Nice compact preview of items for the table
-            preview = ", ".join(
-                f"{it.get('item_code','')} x{it.get('quantity',0)}"
-                for it in items[:3]
-            )
-            if len(items) > 3:
-                preview += f" … (+{len(items)-3} more)"
-
-            summary_rows.append({
-                "Order ID": o["order_id"],
-                "Timestamp": o["timestamp"],
-                "Customer Name": o["customer_name"],
-                "Company Name": o["company_name"],
-                "Email": o["email"],
-                "Items": item_count,
-                "Total Qty": total_qty,
-                "Preview": preview
-            })
-
-        df_summary = pd.DataFrame(summary_rows)
-        st.metric("Total Orders", len(df_summary))
-        st.dataframe(df_summary, use_container_width=True)
-
-        st.divider()
-
-        # ---- Pick one order to inspect/download ----
-        order_ids = [o["order_id"] for o in orders]
-        selected_id = st.selectbox("Select an order to download", order_ids)
-
-        # Find the selected order
-        sel = next(o for o in orders if o["order_id"] == selected_id)
-
-        # Show details in an expander (optional)
-        with st.expander("View order details", expanded=False):
-            st.write(f"**Order ID:** {sel['order_id']}")
-            st.write(f"**Customer:** {sel['customer_name']}  |  **Company:** {sel['company_name']}")
-            st.write(f"**Email:** {sel['email']}  |  **Timestamp:** {sel['timestamp']}")
-
-            # Line items table for the selected order
-            df_items = pd.DataFrame([
-                {
-                    "Item Code": it.get("item_code",""),
-                    "Description": it.get("description",""),
-                    "Brand": it.get("brand",""),
-                    "UOM": it.get("uom",""),
-                    "Quantity": it.get("quantity",0),
-                }
-                for it in sel.get("items", [])
-            ])
-            st.dataframe(df_items, use_container_width=True)
-
-        # ---- Download buttons for the selected order ----
-        colA, colB, colC = st.columns(3)
-
-        # CSV of the selected order's line items
-        with colA:
-            csv_sel = df_items.to_csv(index=False)
-            st.download_button(
-                "📥 Download selected order (CSV)",
-                csv_sel,
-                f"{selected_id}.csv",
-                "text/csv",
-                use_container_width=True
-            )
-
-        # JSON of the selected order (one object containing all items)
-        with colB:
-            json_bytes = json.dumps(sel, ensure_ascii=False, indent=2).encode("utf-8")
-            st.download_button(
-                "📥 Download selected order (JSON)",
-                json_bytes,
-                f"{selected_id}.json",
-                "application/json",
-                use_container_width=True
-            )
-
-        # Optional: all orders as ONE-ROW-PER-ORDER CSV
-        with colC:
-            all_csv = df_summary.to_csv(index=False)
-            st.download_button(
-                "📥 Download all orders (summary CSV)",
-                all_csv,
-                "orders_summary.csv",
-                "text/csv",
-                use_container_width=True
-            )
+    with tab1:
+        st.subheader("All Orders")
+    
+        if not st.session_state.orders_db:
+            st.info("No orders received yet.")
+        else:
+            orders = st.session_state.orders_db
+    
+            # ---- Build 1-row-per-order summary ----
+            summary_rows = []
+            for o in orders:
+                items = o.get("items", [])
+                item_count = len(items)
+                total_qty = sum(int(it.get("quantity", 0)) for it in items)
+    
+                # Nice compact preview of items for the table
+                preview = ", ".join(
+                    f"{it.get('item_code','')} x{it.get('quantity',0)}"
+                    for it in items[:3]
+                )
+                if len(items) > 3:
+                    preview += f" … (+{len(items)-3} more)"
+    
+                summary_rows.append({
+                    "Order ID": o["order_id"],
+                    "Timestamp": o["timestamp"],
+                    "Customer Name": o["customer_name"],
+                    "Company Name": o["company_name"],
+                    "Email": o["email"],
+                    "Items": item_count,
+                    "Total Qty": total_qty,
+                    "Preview": preview
+                })
+    
+            df_summary = pd.DataFrame(summary_rows)
+            st.metric("Total Orders", len(df_summary))
+            st.dataframe(df_summary, use_container_width=True)
+    
+            st.divider()
+    
+            # ---- Pick one order to inspect/download ----
+            order_ids = [o["order_id"] for o in orders]
+            selected_id = st.selectbox("Select an order to download", order_ids)
+    
+            # Find the selected order
+            sel = next(o for o in orders if o["order_id"] == selected_id)
+    
+            # Show details in an expander (optional)
+            with st.expander("View order details", expanded=False):
+                st.write(f"**Order ID:** {sel['order_id']}")
+                st.write(f"**Customer:** {sel['customer_name']}  |  **Company:** {sel['company_name']}")
+                st.write(f"**Email:** {sel['email']}  |  **Timestamp:** {sel['timestamp']}")
+    
+                # Line items table for the selected order
+                df_items = pd.DataFrame([
+                    {
+                        "Item Code": it.get("item_code",""),
+                        "Description": it.get("description",""),
+                        "Brand": it.get("brand",""),
+                        "UOM": it.get("uom",""),
+                        "Quantity": it.get("quantity",0),
+                    }
+                    for it in sel.get("items", [])
+                ])
+                st.dataframe(df_items, use_container_width=True)
+    
+            # ---- Download buttons for the selected order ----
+            colA, colB, colC = st.columns(3)
+    
+            # CSV of the selected order's line items
+            with colA:
+                csv_sel = df_items.to_csv(index=False)
+                st.download_button(
+                    "📥 Download selected order (CSV)",
+                    csv_sel,
+                    f"{selected_id}.csv",
+                    "text/csv",
+                    use_container_width=True
+                )
+    
+            # JSON of the selected order (one object containing all items)
+            with colB:
+                json_bytes = json.dumps(sel, ensure_ascii=False, indent=2).encode("utf-8")
+                st.download_button(
+                    "📥 Download selected order (JSON)",
+                    json_bytes,
+                    f"{selected_id}.json",
+                    "application/json",
+                    use_container_width=True
+                )
+    
+            # Optional: all orders as ONE-ROW-PER-ORDER CSV
+            with colC:
+                all_csv = df_summary.to_csv(index=False)
+                st.download_button(
+                    "📥 Download all orders (summary CSV)",
+                    all_csv,
+                    "orders_summary.csv",
+                    "text/csv",
+                    use_container_width=True
+                )
 
     
     with tab2:
