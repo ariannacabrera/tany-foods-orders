@@ -84,6 +84,59 @@ div.send-order button[kind="secondary"]:hover,
 div.send-order button:hover {
   filter: brightness(0.95);
 }
+
+/* Mobile-friendly adjustments */
+@media (max-width: 768px) {
+  /* Reduce padding on mobile */
+  .block-container {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    padding-top: 1rem !important;
+  }
+
+  /* Make titles smaller on mobile */
+  h1 {
+    font-size: 1.5rem !important;
+  }
+
+  h2 {
+    font-size: 1.25rem !important;
+  }
+
+  h3 {
+    font-size: 1.1rem !important;
+  }
+
+  /* Make buttons more touch-friendly */
+  button {
+    min-height: 44px !important;
+    font-size: 16px !important;
+  }
+
+  /* Make input fields more touch-friendly */
+  input, select {
+    font-size: 16px !important;
+    min-height: 44px !important;
+  }
+
+  /* Reduce column gaps on mobile */
+  [data-testid="column"] {
+    padding: 0.25rem !important;
+  }
+
+  /* Make product cards stack better */
+  .element-container {
+    margin-bottom: 0.5rem !important;
+  }
+}
+
+/* Tablet adjustments */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .block-container {
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
+  }
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -110,14 +163,12 @@ def load_logo():
 def signup_page():
     """User signup page"""
     st.title("🍽️ Tany Foods Orders")
-    
+
     # Display logo if available
     logo = load_logo()
     if logo:
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            st.image(logo, use_container_width=True)
-    
+        st.image(logo, width=300)
+
     st.subheader("Create Your Account")
     
     with st.form("signup_form"):
@@ -156,14 +207,12 @@ def signup_page():
 def login_page():
     """User login page"""
     st.title("🍽️ Tany Foods Orders")
-    
+
     # Display logo if available
     logo = load_logo()
     if logo:
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            st.image(logo, use_container_width=True)
-    
+        st.image(logo, width=300)
+
     st.subheader("Welcome Back!")
     
     tab1, tab2 = st.tabs(["Customer Login", "Admin Login"])
@@ -216,15 +265,12 @@ def product_catalog_page():
     st.write(f"Welcome, {st.session_state.user_data.get('first_name', 'User')}!")
     
     # Search bar
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        search_query = st.text_input("🔍 Search products", placeholder="Search by item code or description...")
-    with col2:
-        st.write("")
-        st.write("")
-        if st.button("🛒 View Cart", use_container_width=True):
-            st.session_state.current_page = 'cart'
-            st.rerun()
+    search_query = st.text_input("🔍 Search products", placeholder="Search by item code or description...")
+
+    # View Cart button
+    if st.button("🛒 View Cart", use_container_width=True):
+        st.session_state.current_page = 'cart'
+        st.rerun()
     
     # Category filter
     categories = list(set([p.get('category', 'Uncategorized') for p in st.session_state.products_db]))
@@ -243,26 +289,27 @@ def product_catalog_page():
     if not filtered_products:
         st.info("No products found. Admin needs to upload product database.")
     else:
-        cols = st.columns(3)
+        # Use 1 column on mobile for better readability
         for idx, product in enumerate(filtered_products):
-            with cols[idx % 3]:
-                with st.container():
-                    # Title + description
-                    st.markdown(f"**{product.get('item_code', 'N/A')}**")
-                    st.write(product.get('description', 'No description'))
-    
-                    # Image (URL or local path)
-                    img = product_image_src(product)
-                    if img and (img.startswith("http") or os.path.exists(img)):
-                        st.image(img, use_container_width=True)
-                    else:
-                        st.image("https://via.placeholder.com/150", use_container_width=True)
-    
-                    # View details button
-                    if st.button("View Details", key=f"view_{product.get('item_code','')}_{idx}"):
-                        st.session_state.selected_product = product
-                        st.session_state.current_page = 'product_detail'
-                        st.rerun()
+            with st.container():
+                # Title + description
+                st.markdown(f"**{product.get('item_code', 'N/A')}**")
+                st.write(product.get('description', 'No description'))
+
+                # Image (URL or local path)
+                img = product_image_src(product)
+                if img and (img.startswith("http") or os.path.exists(img)):
+                    st.image(img, use_container_width=True)
+                else:
+                    st.image("https://via.placeholder.com/150", use_container_width=True)
+
+                # View details button
+                if st.button("View Details", key=f"view_{product.get('item_code','')}_{idx}", use_container_width=True):
+                    st.session_state.selected_product = product
+                    st.session_state.current_page = 'product_detail'
+                    st.rerun()
+
+                st.divider()
 
 def product_detail_page():
     """Dedicated product detail page with back navigation"""
@@ -276,76 +323,75 @@ def product_detail_page():
 
     pid = product.get('item_code', 'unknown').replace(' ', '_')
 
-    # Top bar
-    left, mid, right = st.columns([1, 4, 1])
-    with left:
+    # Top bar - mobile friendly
+    col1, col2 = st.columns([1, 1])
+    with col1:
         if st.button("← Back to Catalog", use_container_width=True, key=f"back_{pid}"):
             st.session_state.current_page = 'catalog'
             st.rerun()
-    with mid:
-        st.title(f"Product: {product.get('item_code')}")
-        st.caption(product.get('description', ''))
-    with right:
+    with col2:
         if st.button("🛒 View Cart", use_container_width=True, key=f"view_cart_{pid}"):
             st.session_state.current_page = 'cart'
             st.rerun()
 
-    # Body
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        img = product_image_src(product)
-        if img and (img.startswith("http") or os.path.exists(img)):
-            st.image(img, use_container_width=True)
+    st.title(f"{product.get('item_code')}")
+    st.caption(product.get('description', ''))
+
+    # Body - Stack on mobile
+    # Product image
+    img = product_image_src(product)
+    if img and (img.startswith("http") or os.path.exists(img)):
+        st.image(img, use_container_width=True)
+    else:
+        st.image("https://via.placeholder.com/600x400", use_container_width=True)
+
+    # Product details
+    st.markdown(f"**Category:** {product.get('category', 'N/A')}")
+    if product.get('brand'):
+        st.markdown(f"**Brand:** {product.get('brand')}")
+
+    # UOM
+    uom_options = []
+    if product.get('allow_case', True): uom_options.append("Case")
+    if product.get('allow_each', True): uom_options.append("Each")
+    if not uom_options:
+        st.error("This product is not available for purchase.")
+        return
+
+    selected_uom = st.radio(
+        "Unit of Measure",
+        uom_options,
+        horizontal=True,
+        key=f"uom_{pid}"
+    )
+
+    # Quantity
+    qty_key = f"qty_{pid}"
+    if qty_key not in st.session_state:
+        st.session_state[qty_key] = 1
+
+    qty = st.number_input(
+        "Quantity",
+        min_value=1,
+        value=st.session_state[qty_key],
+        key=f"qty_input_{pid}"
+    )
+    st.session_state[qty_key] = qty
+
+    # Add to cart button
+    if st.button("🛒 Add to Cart", use_container_width=True, key=f"add_to_cart_{pid}"):
+        cart_key = product["item_code"]
+        if cart_key in st.session_state.cart:
+            st.warning("This item is already in your cart. Edit the quantity in the cart.")
         else:
-            st.image("https://via.placeholder.com/600x400", use_container_width=True)
-
-    with col2:
-        st.markdown(f"**Category:** {product.get('category', 'N/A')}")
-        if product.get('brand'):
-            st.markdown(f"**Brand:** {product.get('brand')}")
-
-        # UOM
-        uom_options = []
-        if product.get('allow_case', True): uom_options.append("Case")
-        if product.get('allow_each', True): uom_options.append("Each")
-        if not uom_options:
-            st.error("This product is not available for purchase.")
-            return
-
-        selected_uom = st.radio(
-            "Unit of Measure",
-            uom_options,
-            horizontal=True,
-            key=f"uom_{pid}"
-        )
-
-        # Quantity
-        qty_key = f"qty_{pid}"  # or f"qty_{product.get('item_code')}"
-        if qty_key not in st.session_state:
-            st.session_state[qty_key] = 1
-
-        qty = st.number_input(
-            "Quantity",
-            min_value=1,
-            value=st.session_state[qty_key],
-            key=f"qty_input_{pid}"
-        )
-        st.session_state[qty_key] = qty
-
-        # Give this a unique key
-        if st.button("🛒 Add to Cart", use_container_width=True, key=f"add_to_cart_{pid}"):
-            cart_key = product["item_code"] 
-            if cart_key in st.session_state.cart:
-                st.warning("This item is already in your cart. Edit the quantity in the cart.")
-            else:
-                st.session_state.cart[cart_key] = {
-                    "item_code": product["item_code"],
-                    "description": product["description"],
-                    "brand": (product.get("brand") or "").strip(),
-                    "uom": selected_uom,
-                    "quantity": int(st.session_state[qty_key]),
-                }
-                st.success("✅ Added to cart!")
+            st.session_state.cart[cart_key] = {
+                "item_code": product["item_code"],
+                "description": product["description"],
+                "brand": (product.get("brand") or "").strip(),
+                "uom": selected_uom,
+                "quantity": int(st.session_state[qty_key]),
+            }
+            st.success("✅ Added to cart!")
 
 def cart_page():
     """Shopping cart page"""
@@ -361,47 +407,33 @@ def cart_page():
 
     # Display cart items
     st.subheader(f"Items in Cart: {len(st.session_state.cart)}")
-    
-    # Column widths: Item, Description, Brand, UOM, Qty, Action
-    COLS = [1.5, 3, 1.5, 1, 1, 1]   # description gets more room
 
-    # Header
-    h1, h2, h3, h4, h5, h6 = st.columns(COLS)
-    with h1: st.markdown("**Item**")
-    with h2: st.markdown("**Description**")
-    with h3: st.markdown("**Brand**")
-    with h4: st.markdown("**UOM**")
-    with h5: st.markdown("**Qty**")
-    with h6: st.markdown("**Action**")
-    st.divider()
-    
-    # Rows
+    # Mobile-friendly cart display
     for cart_key, item in list(st.session_state.cart.items()):
-        c1, c2, c3, c4, c5, c6 = st.columns(COLS, gap="small")
-    
-        with c1:
-            st.markdown(f"**{item.get('item_code','')}**")
-        with c2:
-            st.write(ellipsize(item.get('description', ''), max_chars=40))  # more chars fit now
-        with c3:
-            st.write(item.get('brand', '—'))
-        with c4:
-            st.write(item.get('uom', ''))
-        with c5:
-            new_qty = st.number_input(
-                label="",                
-                label_visibility="collapsed",  
-                min_value=1,
-                step=1,
-                value=int(item['quantity']),
-                key=f"cart_qty_{cart_key}"
-            )
-            if new_qty != item['quantity']:
-                st.session_state.cart[cart_key]['quantity'] = new_qty
-        with c6:
+        with st.container():
+            st.markdown(f"**{item.get('item_code','')}** - {item.get('description', '')}")
+
+            col1, col2, col3 = st.columns([1, 1, 1])
+            with col1:
+                st.write(f"**Brand:** {item.get('brand', '—')}")
+            with col2:
+                st.write(f"**UOM:** {item.get('uom', '')}")
+            with col3:
+                new_qty = st.number_input(
+                    "Qty",
+                    min_value=1,
+                    step=1,
+                    value=int(item['quantity']),
+                    key=f"cart_qty_{cart_key}"
+                )
+                if new_qty != item['quantity']:
+                    st.session_state.cart[cart_key]['quantity'] = new_qty
+
             if st.button("🗑️ Remove", key=f"remove_{cart_key}", use_container_width=True):
                 del st.session_state.cart[cart_key]
                 st.rerun()
+
+            st.divider()
     
     # Send order button (green via CSS)
     st.markdown('<div class="send-order">', unsafe_allow_html=True)
