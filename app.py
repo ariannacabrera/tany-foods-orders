@@ -62,6 +62,7 @@ st.session_state.setdefault("users_db", {})
 st.session_state.setdefault("products_db", [])
 st.session_state.setdefault("orders_db", [])
 st.session_state.setdefault("current_page", "catalog")
+st.session_state.setdefault("last_product_id", None)
 
 # Load persisted data (overwrites the empty defaults if files exist)
 load_data()
@@ -305,11 +306,16 @@ def product_catalog_page():
 
                 # View details button
                 if st.button("View Details", key=f"view_{product.get('item_code','')}_{idx}", use_container_width=True):
+                    pid = product.get('item_code', 'unknown').replace(' ', '_')
+                    # reset qty state for this product
+                    st.session_state.pop(f"qty_{pid}", None)
+                    st.session_state.pop(f"qty_input_{pid}", None)
+                
                     st.session_state.selected_product = product
                     st.session_state.current_page = 'product_detail'
                     st.rerun()
-
                 st.divider()
+            
 
 def product_detail_page():
     """Dedicated product detail page with back navigation"""
@@ -323,11 +329,21 @@ def product_detail_page():
 
     pid = product.get('item_code', 'unknown').replace(' ', '_')
 
+    # Reset quantity once when entering this product page
+     if st.session_state.get("last_product_id") != pid:
+        st.session_state.pop(f"qty_{pid}", None)
+        st.session_state.pop(f"qty_input_{pid}", None)
+        st.session_state["last_product_id"] = pid
+
     # Top bar - mobile friendly
     col1, col2 = st.columns([1, 1])
     with col1:
         if st.button("← Back to Catalog", use_container_width=True, key=f"back_{pid}"):
             st.session_state.current_page = 'catalog'
+            st.session_state.pop(f"qty_{pid}", None)
+            st.session_state.pop(f"qty_input_{pid}", None)
+            st.session_state["last_product_id"] = None
+            st.session_state.current_page = "catalog"
             st.rerun()
     with col2:
         if st.button("🛒 View Cart", use_container_width=True, key=f"view_cart_{pid}"):
