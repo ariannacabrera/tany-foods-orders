@@ -1,17 +1,70 @@
 import streamlit as st
+# Page configuration
 import pandas as pd
 import json
 from datetime import datetime
 import os
 from PIL import Image
+from pathlib import Path
 
-# Page configuration
 st.set_page_config(
     page_title="Tany Foods Orders",
     page_icon="🍽️",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
+
+# --- helpers ---
+DATA_DIR = Path("data")
+DATA_DIR.mkdir(exist_ok=True)
+
+def _path(name: str) -> Path:
+    return DATA_DIR / name
+
+def load_json(name: str, default):
+    p = _path(name)
+    try:
+        if p.exists():
+            return json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        pass  # corrupted file → fall back
+    return default
+
+def save_json(name: str, obj):
+    p = _path(name)
+    tmp = p.with_suffix(p.suffix + ".tmp")
+    tmp.write_text(json.dumps(obj, ensure_ascii=False, indent=2), encoding="utf-8")
+    tmp.replace(p)
+
+USERS_FILE = "users.json"
+PRODUCTS_FILE = "products.json"
+ORDERS_FILE = "orders.json"
+
+def load_data():
+    st.session_state.users_db    = load_json(USERS_FILE, {})
+    st.session_state.products_db = load_json(PRODUCTS_FILE, [])
+    st.session_state.orders_db   = load_json(ORDERS_FILE, [])
+
+def save_users():
+    save_json(USERS_FILE, st.session_state.users_db)
+
+def save_products():
+    save_json(PRODUCTS_FILE, st.session_state.products_db)
+
+def save_orders():
+    save_json(ORDERS_FILE, st.session_state.orders_db)
+
+# Baseline defaults
+st.session_state.setdefault("logged_in", False)
+st.session_state.setdefault("user_data", {})
+st.session_state.setdefault("cart", {})
+st.session_state.setdefault("users_db", {})
+st.session_state.setdefault("products_db", [])
+st.session_state.setdefault("orders_db", [])
+st.session_state.setdefault("current_page", "catalog")
+
+# Load persisted data (overwrites the empty defaults if files exist)
+load_data()
 
 st.markdown("""
 <style>
@@ -38,22 +91,6 @@ div.send-order button:hover {
 def ellipsize(text: str, max_chars: int = 28) -> str:
     text = str(text or "")
     return (text[:max_chars-1] + "…") if len(text) > max_chars else text
-
-# Initialize session state
-if 'logged_in' not in st.session_state:
-    st.session_state.logged_in = False
-if 'user_data' not in st.session_state:
-    st.session_state.user_data = {}
-if 'cart' not in st.session_state:
-    st.session_state.cart = {}
-if 'users_db' not in st.session_state:
-    st.session_state.users_db = {}
-if 'products_db' not in st.session_state:
-    st.session_state.products_db = []
-if 'orders_db' not in st.session_state:
-    st.session_state.orders_db = []
-if 'current_page' not in st.session_state:
-    st.session_state.current_page = 'catalog'
 
 # Admin credentials (hardcoded - in production, use environment variables)
 ADMIN_USERNAME = "admin"
@@ -103,6 +140,7 @@ def signup_page():
                     'company_name': company_name,
                     'password': password
                 }
+                save_users()
                 st.success("Account created successfully! Please log in.")
                 st.rerun()
     
@@ -390,6 +428,8 @@ def submit_order():
     }
     
     st.session_state.orders_db.append(order)
+    save_orders()
+    
     st.session_state.cart = {}
     st.session_state.show_order_confirmation = False
     st.success(f"✅ Order {order['order_id']} submitted successfully!")
@@ -486,6 +526,7 @@ def admin_dashboard():
                     })
                 
                 st.session_state.products_db = products
+                save_products()
                 st.success(f"✅ Uploaded {len(products)} products successfully!")
                 st.dataframe(df, use_container_width=True)
                 
