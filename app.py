@@ -532,58 +532,108 @@ def admin_dashboard():
     
     tab1, tab2 = st.tabs(["📦 Orders Management", "📋 Product Management"])
     
-    with tab1:
-        st.subheader("All Orders")
-        
-        if not st.session_state.orders_db:
-            st.info("No orders received yet.")
-        else:
-            # Display orders summary
-            st.metric("Total Orders", len(st.session_state.orders_db))
-            
-            # Convert orders to DataFrame for display and download
-            orders_data = []
-            for order in st.session_state.orders_db:
-                for item in order['items']:
-                    orders_data.append({
-                        'Order ID': order['order_id'],
-                        'Timestamp': order['timestamp'],
-                        'Customer Name': order['customer_name'],
-                        'Company Name': order['company_name'],
-                        'Email': order['email'],
-                        'Item Code': item['item_code'],
-                        'Description': item['description'],
-                        'Quantity': item['quantity'],
-                        'UOM': item['uom']
-                    })
-            
-            df_orders = pd.DataFrame(orders_data)
-            st.dataframe(df_orders, use_container_width=True)
-            
-            # Download buttons
-            col1, col2 = st.columns(2)
-            with col1:
-                csv = df_orders.to_csv(index=False)
-                st.download_button(
-                    "📥 Download as CSV",
-                    csv,
-                    "tany_foods_orders.csv",
-                    "text/csv",
-                    use_container_width=True
-                )
-            with col2:
-                excel_buffer = pd.ExcelWriter('temp.xlsx', engine='xlsxwriter')
-                df_orders.to_excel(excel_buffer, index=False, sheet_name='Orders')
-                excel_buffer.close()
-                
-                with open('temp.xlsx', 'rb') as f:
-                    st.download_button(
-                        "📥 Download as Excel",
-                        f,
-                        "tany_foods_orders.xlsx",
-                        "application/vnd.ms-excel",
-                        use_container_width=True
-                    )
+with tab1:
+    st.subheader("All Orders")
+
+    if not st.session_state.orders_db:
+        st.info("No orders received yet.")
+    else:
+        orders = st.session_state.orders_db
+
+        # ---- Build 1-row-per-order summary ----
+        summary_rows = []
+        for o in orders:
+            items = o.get("items", [])
+            item_count = len(items)
+            total_qty = sum(int(it.get("quantity", 0)) for it in items)
+
+            # Nice compact preview of items for the table
+            preview = ", ".join(
+                f"{it.get('item_code','')} x{it.get('quantity',0)}"
+                for it in items[:3]
+            )
+            if len(items) > 3:
+                preview += f" … (+{len(items)-3} more)"
+
+            summary_rows.append({
+                "Order ID": o["order_id"],
+                "Timestamp": o["timestamp"],
+                "Customer Name": o["customer_name"],
+                "Company Name": o["company_name"],
+                "Email": o["email"],
+                "Items": item_count,
+                "Total Qty": total_qty,
+                "Preview": preview
+            })
+
+        df_summary = pd.DataFrame(summary_rows)
+        st.metric("Total Orders", len(df_summary))
+        st.dataframe(df_summary, use_container_width=True)
+
+        st.divider()
+
+        # ---- Pick one order to inspect/download ----
+        order_ids = [o["order_id"] for o in orders]
+        selected_id = st.selectbox("Select an order to download", order_ids)
+
+        # Find the selected order
+        sel = next(o for o in orders if o["order_id"] == selected_id)
+
+        # Show details in an expander (optional)
+        with st.expander("View order details", expanded=False):
+            st.write(f"**Order ID:** {sel['order_id']}")
+            st.write(f"**Customer:** {sel['customer_name']}  |  **Company:** {sel['company_name']}")
+            st.write(f"**Email:** {sel['email']}  |  **Timestamp:** {sel['timestamp']}")
+
+            # Line items table for the selected order
+            df_items = pd.DataFrame([
+                {
+                    "Item Code": it.get("item_code",""),
+                    "Description": it.get("description",""),
+                    "Brand": it.get("brand",""),
+                    "UOM": it.get("uom",""),
+                    "Quantity": it.get("quantity",0),
+                }
+                for it in sel.get("items", [])
+            ])
+            st.dataframe(df_items, use_container_width=True)
+
+        # ---- Download buttons for the selected order ----
+        colA, colB, colC = st.columns(3)
+
+        # CSV of the selected order's line items
+        with colA:
+            csv_sel = df_items.to_csv(index=False)
+            st.download_button(
+                "📥 Download selected order (CSV)",
+                csv_sel,
+                f"{selected_id}.csv",
+                "text/csv",
+                use_container_width=True
+            )
+
+        # JSON of the selected order (one object containing all items)
+        with colB:
+            json_bytes = json.dumps(sel, ensure_ascii=False, indent=2).encode("utf-8")
+            st.download_button(
+                "📥 Download selected order (JSON)",
+                json_bytes,
+                f"{selected_id}.json",
+                "application/json",
+                use_container_width=True
+            )
+
+        # Optional: all orders as ONE-ROW-PER-ORDER CSV
+        with colC:
+            all_csv = df_summary.to_csv(index=False)
+            st.download_button(
+                "📥 Download all orders (summary CSV)",
+                all_csv,
+                "orders_summary.csv",
+                "text/csv",
+                use_container_width=True
+            )
+
     
     with tab2:
         st.subheader("Product Database Management")
