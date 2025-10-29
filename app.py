@@ -6,6 +6,7 @@ from datetime import datetime
 import os
 from PIL import Image
 from pathlib import Path
+from io import BytesIO
 from zoneinfo import ZoneInfo
 APP_TZ = os.getenv("APP_TIMEZONE", "America/Chicago")
 
@@ -41,6 +42,14 @@ def save_json(name: str, obj):
 USERS_FILE = "users.json"
 PRODUCTS_FILE = "products.json"
 ORDERS_FILE = "orders.json"
+
+# excel helper
+def df_to_excel_bytes(df: pd.DataFrame, sheet_name: str = "Sheet1") -> bytes:
+    buf = BytesIO()
+    with pd.ExcelWriter(buf, engine="xlsxwriter") as writer:
+        df.to_excel(writer, index=False, sheet_name=sheet_name)
+    buf.seek(0)
+    return buf.getvalue()
 
 def load_data():
     st.session_state.users_db    = load_json(USERS_FILE, {})
@@ -604,41 +613,27 @@ def admin_dashboard():
                 st.dataframe(df_items, use_container_width=True)
     
             # ---- Download buttons for the selected order ----
-            colA, colB, colC = st.columns(3)
-    
-            # CSV of the selected order's line items
+            colA, colB = st.columns(2)
+            
             with colA:
-                csv_sel = df_items.to_csv(index=False)
+                excel_sel = df_to_excel_bytes(df_items, sheet_name="OrderItems")
                 st.download_button(
-                    "📥 Download selected order (CSV)",
-                    csv_sel,
-                    f"{selected_id}.csv",
-                    "text/csv",
-                    use_container_width=True
+                    "📥 Download selected order (Excel)",
+                    data=excel_sel,
+                    file_name=f"{selected_id}.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    use_container_width=True,
                 )
-    
-            # JSON of the selected order (one object containing all items)
+            
             with colB:
-                json_bytes = json.dumps(sel, ensure_ascii=False, indent=2).encode("utf-8")
+                excel_all = df_to_excel_bytes(df_summary, sheet_name="OrdersSummary")
                 st.download_button(
-                    "📥 Download selected order (JSON)",
-                    json_bytes,
-                    f"{selected_id}.json",
-                    "application/json",
-                    use_container_width=True
+                    "📥 Download all orders (Excel)",
+                    data=excel_all,
+                    file_name="orders_summary.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    use_container_width=True,
                 )
-    
-            # Optional: all orders as ONE-ROW-PER-ORDER CSV
-            with colC:
-                all_csv = df_summary.to_csv(index=False)
-                st.download_button(
-                    "📥 Download all orders (summary CSV)",
-                    all_csv,
-                    "orders_summary.csv",
-                    "text/csv",
-                    use_container_width=True
-                )
-
     
     with tab2:
         st.subheader("Product Database Management")
