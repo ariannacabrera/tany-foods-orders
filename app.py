@@ -408,32 +408,35 @@ def cart_page():
     # Display cart items
     st.subheader(f"Items in Cart: {len(st.session_state.cart)}")
 
-    # Mobile-friendly cart display
+    # Compact single-line cart display
     for cart_key, item in list(st.session_state.cart.items()):
-        with st.container():
-            st.markdown(f"**{item.get('item_code','')}** - {item.get('description', '')}")
+        c1, c2, c3, c4, c5, c6 = st.columns([1.2, 2.5, 1, 0.8, 0.8, 0.7])
 
-            col1, col2, col3 = st.columns([1, 1, 1])
-            with col1:
-                st.write(f"**Brand:** {item.get('brand', '—')}")
-            with col2:
-                st.write(f"**UOM:** {item.get('uom', '')}")
-            with col3:
-                new_qty = st.number_input(
-                    "Qty",
-                    min_value=1,
-                    step=1,
-                    value=int(item['quantity']),
-                    key=f"cart_qty_{cart_key}"
-                )
-                if new_qty != item['quantity']:
-                    st.session_state.cart[cart_key]['quantity'] = new_qty
-
-            if st.button("🗑️ Remove", key=f"remove_{cart_key}", use_container_width=True):
+        with c1:
+            st.markdown(f"**{item.get('item_code','')}**")
+        with c2:
+            st.write(ellipsize(item.get('description', ''), max_chars=35))
+        with c3:
+            st.write(item.get('brand', '—'))
+        with c4:
+            st.write(item.get('uom', ''))
+        with c5:
+            new_qty = st.number_input(
+                label="",
+                label_visibility="collapsed",
+                min_value=1,
+                step=1,
+                value=int(item['quantity']),
+                key=f"cart_qty_{cart_key}"
+            )
+            if new_qty != item['quantity']:
+                st.session_state.cart[cart_key]['quantity'] = new_qty
+        with c6:
+            if st.button("🗑️", key=f"remove_{cart_key}", use_container_width=True):
                 del st.session_state.cart[cart_key]
                 st.rerun()
 
-            st.divider()
+    st.divider()
     
     # Send order button (green via CSS)
     st.markdown('<div class="send-order">', unsafe_allow_html=True)
