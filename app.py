@@ -330,7 +330,7 @@ def product_detail_page():
     pid = product.get('item_code', 'unknown').replace(' ', '_')
 
     # Reset quantity once when entering this product page
-     if st.session_state.get("last_product_id") != pid:
+    if st.session_state.get("last_product_id") != pid:
         st.session_state.pop(f"qty_{pid}", None)
         st.session_state.pop(f"qty_input_{pid}", None)
         st.session_state["last_product_id"] = pid
