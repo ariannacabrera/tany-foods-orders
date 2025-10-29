@@ -63,6 +63,7 @@ st.session_state.setdefault("products_db", [])
 st.session_state.setdefault("orders_db", [])
 st.session_state.setdefault("current_page", "catalog")
 st.session_state.setdefault("last_product_id", None)
+st.session_state.setdefault("show_filters", False)
 
 # Load persisted data (overwrites the empty defaults if files exist)
 load_data()
@@ -261,36 +262,63 @@ def login_page():
 def product_catalog_page():
     """Main product catalog page"""
     st.title("🍽️ Tany Foods - Product Catalog")
-    
+
     # Welcome message
     st.write(f"Welcome, {st.session_state.user_data.get('first_name', 'User')}!")
-    
-    # Search bar
-    search_query = st.text_input("🔍 Search products", placeholder="Search by item code or description...")
 
-    # View Cart button
+    # Ensure toggle exists
+    st.session_state.setdefault("show_filters", False)
+
+    # --- Search (left) + small Filter button (right) ---
+    c1, c2 = st.columns([6, 1])
+
+    with c1:
+        search_query = st.text_input(
+            "Search",
+            placeholder="Search by item code or description…",
+            label_visibility="collapsed",
+            key="catalog_search",
+        )
+
+    with c2:
+        # Prefer a compact popover if available; fallback to a toggle+expander
+        try:
+            with st.popover("Filter", use_container_width=True):
+                categories_all = list(set([p.get('category', 'Uncategorized') for p in st.session_state.products_db]))
+                selected_category = st.selectbox("Category", ["All"] + categories_all, key="filter_category")
+        except Exception:
+            if st.button("Filter", use_container_width=True):
+                st.session_state.show_filters = not st.session_state.get("show_filters", False)
+
+    # Fallback filter panel (only if popover not available or user toggled)
+    if "selected_category" not in locals():
+        categories_all = list(set([p.get('category', 'Uncategorized') for p in st.session_state.products_db]))
+        if st.session_state.get("show_filters", False):
+            with st.expander("Filters", expanded=True):
+                selected_category = st.selectbox("Category", ["All"] + categories_all, key="filter_category_fallback")
+        else:
+            selected_category = "All"
+
+    # View Cart button (below search+filter)
     if st.button("🛒 View Cart", use_container_width=True):
         st.session_state.current_page = 'cart'
         st.rerun()
-    
-    # Category filter
-    categories = list(set([p.get('category', 'Uncategorized') for p in st.session_state.products_db]))
-    selected_category = st.selectbox("Filter by Category", ["All"] + categories)
-    
-    # Filter products
+
+    # --- Apply filters ---
     filtered_products = st.session_state.products_db
     if search_query:
-        filtered_products = [p for p in filtered_products if 
-                           search_query.lower() in p.get('item_code', '').lower() or 
-                           search_query.lower() in p.get('description', '').lower()]
+        filtered_products = [
+            p for p in filtered_products
+            if search_query.lower() in p.get('item_code', '').lower()
+            or search_query.lower() in p.get('description', '').lower()
+        ]
     if selected_category != "All":
         filtered_products = [p for p in filtered_products if p.get('category') == selected_category]
-    
-    # Display products
+
+    # --- Render products ---
     if not filtered_products:
         st.info("No products found. Admin needs to upload product database.")
     else:
-        # Use 1 column on mobile for better readability
         for idx, product in enumerate(filtered_products):
             with st.container():
                 # Title + description
@@ -310,11 +338,14 @@ def product_catalog_page():
                     # reset qty state for this product
                     st.session_state.pop(f"qty_{pid}", None)
                     st.session_state.pop(f"qty_input_{pid}", None)
-                
+
                     st.session_state.selected_product = product
                     st.session_state.current_page = 'product_detail'
                     st.rerun()
+
+            if idx < len(filtered_products) - 1:
                 st.divider()
+
             
 
 def product_detail_page():
