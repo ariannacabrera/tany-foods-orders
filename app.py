@@ -395,7 +395,7 @@ def product_detail_page():
 
 def cart_page():
     """Shopping cart page"""
-    st.title("🛒 Your Shopping Cart")
+    st.title("Shopping Cart")
     
     if st.button("← Back to Catalog"):
         st.session_state.current_page = 'catalog'
