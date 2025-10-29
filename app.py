@@ -516,7 +516,7 @@ def admin_dashboard():
                         'brand': row.get('brand', ''),
                         'allow_case': row.get('allow_case', True),
                         'allow_each': row.get('allow_each', True),
-                        'image_url': row.get('image_url', '') 
+                        'image_path': row.get('image path', '')
                     })
                 
                 st.session_state.products_db = products
