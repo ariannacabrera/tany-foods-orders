@@ -210,6 +210,35 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# make it 3 per row override flex streamlit (code before this)
+st.markdown("""
+<style>
+/* Make the columns row behave like a real row on mobile */
+@media (max-width: 768px) {
+  /* Force the row back to horizontal inside your catalog scope */
+  .catalog-grid [data-testid="stHorizontalBlock"]{
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+  }
+  /* Make each Streamlit column 1/3 width and allow shrinking */
+  .catalog-grid [data-testid="column"]{
+    flex: 0 0 33.3333% !important;
+    width: 33.3333% !important;
+    min-width: 0 !important;          /* override Streamlit's large min-width */
+    padding-left: 0.25rem !important;
+    padding-right: 0.25rem !important;
+  }
+  /* Ensure inner column content doesn't impose a min-width */
+  .catalog-grid [data-testid="column"] > div{
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+</style>
+""", unsafe_allow_html=True)
+
 
 # helper to reduce space
 def ellipsize(text: str, max_chars: int = 28) -> str:
