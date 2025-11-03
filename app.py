@@ -175,6 +175,21 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# product detail image reduction
+st.markdown("""
+<style>
+/* Product detail: fixed but responsive image height */
+.product-detail-imgbox {
+  /* between 160px and 220px; grows a bit on bigger screens */
+  height: clamp(160px, 22vh, 220px);
+  display:flex; align-items:center; justify-content:center;
+  overflow:hidden;
+}
+.product-detail-imgbox img {
+  max-width:100%; max-height:100%; object-fit:contain;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # helper to reduce space
 def ellipsize(text: str, max_chars: int = 28) -> str:
@@ -447,16 +462,20 @@ def product_detail_page():
             st.session_state.current_page = 'cart'
             st.rerun()
 
-    st.title(f"{product.get('item_code')}")
-    st.caption(product.get('description', ''))
+    st.title(f"{product.get('description')}")
+    st.caption(product.get('item_code', ''))
 
     # Body - Stack on mobile
     # Product image
     img = product_image_src(product)
-    if img and (img.startswith("http") or os.path.exists(img)):
-        st.image(img, use_container_width=True)
-    else:
-        st.image("https://via.placeholder.com/600x400", use_container_width=True)
+    if not img or (not img.startswith("http") and not os.path.exists(img)):
+        img = "https://via.placeholder.com/600x400"
+
+    st.markdown(f'''
+      <div class="product-detail-imgbox">
+        <img src="{img}">
+      </div>
+    ''', unsafe_allow_html=True)
 
     # Product details
     st.markdown(f"**Category:** {product.get('category', 'N/A')}")
