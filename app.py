@@ -181,7 +181,7 @@ st.markdown("""
 /* Product detail: fixed but responsive image height */
 .product-detail-imgbox {
   /* between 160px and 220px; grows a bit on bigger screens */
-  height: clamp(160px, 22vh, 220px);
+  height: 220px;
   display:flex; align-items:center; justify-content:center;
   overflow:hidden;
 }
@@ -462,7 +462,7 @@ def product_detail_page():
             st.session_state.current_page = 'cart'
             st.rerun()
 
-    st.title(f"{product.get('description')}")
+    st.header(f"{product.get('description')}")
     st.caption(product.get('item_code', ''))
 
     # Body - Stack on mobile
