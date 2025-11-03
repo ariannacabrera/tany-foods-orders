@@ -210,45 +210,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# last try to show 3 products per row in phone
-st.markdown("""
-<style>
-/* iPhone-specific override: keep 3-up grid on small screens */
-@media screen and (max-width: 430px) {
-  .catalog-grid [data-testid="stHorizontalBlock"] {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: wrap !important;
-    gap: 0.5rem !important;
-  }
-  .catalog-grid [data-testid="column"] {
-    box-sizing: border-box !important;
-
-    /* Make each column exactly 1/3 width (with WebKit flex variants) */
-    -webkit-box-flex: 0 !important;
-    -ms-flex: 0 0 33.3333% !important;
-    flex: 0 0 33.3333% !important;
-    width: 33.3333% !important;
-    min-width: 0 !important;
-
-    padding-left: 0.25rem !important;
-    padding-right: 0.25rem !important;
-  }
-  /* Ensure inner wrappers don’t force a larger width */
-  .catalog-grid [data-testid="column"] > div {
-    width: 100% !important;
-    min-width: 0 !important;
-  }
-
-  /* Keep your small images and tighter text so 3-up fits nicely */
-  .catalog-grid .product-imgbox { height: 150px !important; }
-  .catalog-grid .product-title { font-size: 0.85rem; min-height: 28px; }
-  .catalog-grid button { font-size: 0.85rem; padding: .5rem .25rem; }
-}
-</style>
-""", unsafe_allow_html=True)
-
-
 # helper to reduce space
 def ellipsize(text: str, max_chars: int = 28) -> str:
     text = str(text or "")
