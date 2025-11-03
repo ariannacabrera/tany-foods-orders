@@ -358,9 +358,9 @@ def product_catalog_page():
                 product = filtered_products[product_idx]
                 
                 with col:
-                    # Title + description
-                    st.markdown(f"**{product.get('item_code', 'N/A')}**")
-                    st.caption(ellipsize(product.get('description', 'No description'), max_chars=50))
+                    # Description as title, item code as caption
+                    st.markdown(f"**{product.get('description', 'No description')}**")
+                    st.caption(product.get('item_code', 'N/A'))
 
                     # Image (URL or local path)
                     img = product_image_src(product)
