@@ -153,6 +153,29 @@ div.send-order button:hover {
 </style>
 """, unsafe_allow_html=True)
 
+# make smaller pictures and button aligned
+st.markdown("""
+<style>
+/* Card layout to pin the button at the bottom */
+.product-card { display:flex; flex-direction:column; height:100%; }
+
+/* Fixed image box so card heights are consistent (mobile-friendly) */
+.product-imgbox {
+  height: 150px;                 /* your requested height */
+  display:flex; align-items:center; justify-content:center;
+  overflow:hidden;
+}
+.product-imgbox img { max-width:100%; max-height:100%; object-fit:contain; }
+
+/* Spacer pushes the button to the bottom of the card */
+.product-spacer { flex: 1 1 auto; }
+
+/* Optional: keep titles from changing card height too much */
+.product-title { min-height: 34px; line-height:1.2; }
+</style>
+""", unsafe_allow_html=True)
+
+
 # helper to reduce space
 def ellipsize(text: str, max_chars: int = 28) -> str:
     text = str(text or "")
@@ -358,28 +381,35 @@ def product_catalog_page():
                 product = filtered_products[product_idx]
                 
                 with col:
-                    # Description as title, item code as caption
-                    st.markdown(f"**{product.get('description', 'No description')}**")
-                    st.caption(product.get('item_code', 'N/A'))
-
-                    # Image (URL or local path)
+                    st.markdown('<div class="product-card">', unsafe_allow_html=True)
+                
+                    # (Optional) title/sku
+                    st.markdown(f'<div class="product-title"><strong>{ellipsize(product.get("description",""), 50)}</strong></div>', unsafe_allow_html=True)
+                    st.caption(product.get('item_code','N/A'))
+                
+                    # Fixed-height image box (use <img> for reliable sizing)
                     img = product_image_src(product)
-                    if img and (img.startswith("http") or os.path.exists(img)):
-                        st.image(img, use_container_width=True)
-                    else:
-                        st.image("https://via.placeholder.com/150", use_container_width=True)
-
-                    # View details button
+                    if not img or (not img.startswith("http") and not os.path.exists(img)):
+                        img = "https://via.placeholder.com/600x400"
+                    st.markdown(f'''
+                      <div class="product-imgbox">
+                        <img src="{img}">
+                      </div>
+                    ''', unsafe_allow_html=True)
+                
+                    # Push button down so all align
+                    st.markdown('<div class="product-spacer"></div>', unsafe_allow_html=True)
+                
                     if st.button("View Details", key=f"view_{product.get('item_code','')}_{product_idx}", use_container_width=True):
-                        pid = product.get('item_code', 'unknown').replace(' ', '_')
-                        # reset qty state for this product
+                        pid = product.get('item_code','unknown').replace(' ','_')
                         st.session_state.pop(f"qty_{pid}", None)
                         st.session_state.pop(f"qty_input_{pid}", None)
-
                         st.session_state.selected_product = product
                         st.session_state.current_page = 'product_detail'
                         st.rerun()
-            
+                
+                    st.markdown('</div>', unsafe_allow_html=True)
+
             # Add space between rows
             if row_start + cols_per_row < len(filtered_products):
                 st.markdown("<br>", unsafe_allow_html=True)
