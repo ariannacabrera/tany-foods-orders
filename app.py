@@ -341,39 +341,49 @@ def product_catalog_page():
     if selected_category != "All":
         filtered_products = [p for p in filtered_products if p.get('category') == selected_category]
 
-    # --- Render products ---
+    # --- Render products ---                
     if not filtered_products:
         st.info("No products found. Admin needs to upload product database.")
     else:
-        for idx, product in enumerate(filtered_products):
-            with st.container():
-                # Title + description
-                st.markdown(f"**{product.get('item_code', 'N/A')}**")
-                st.write(product.get('description', 'No description'))
-
-                # Image (URL or local path)
-                img = product_image_src(product)
-                if img and (img.startswith("http") or os.path.exists(img)):
-                    st.image(img, use_container_width=True)
-                else:
-                    st.image("https://via.placeholder.com/150", use_container_width=True)
-
-                # View details button
-                if st.button("View Details", key=f"view_{product.get('item_code','')}_{idx}", use_container_width=True):
-                    pid = product.get('item_code', 'unknown').replace(' ', '_')
-                    # reset qty state for this product
-                    st.session_state.pop(f"qty_{pid}", None)
-                    st.session_state.pop(f"qty_input_{pid}", None)
-
-                    st.session_state.selected_product = product
-                    st.session_state.current_page = 'product_detail'
-                    st.rerun()
-
-            if idx < len(filtered_products) - 1:
-                st.divider()
-
+        # Display products in a 3-column grid
+        cols_per_row = 3
+        for row_start in range(0, len(filtered_products), cols_per_row):
+            cols = st.columns(cols_per_row)
             
+            for col_idx, col in enumerate(cols):
+                product_idx = row_start + col_idx
+                if product_idx >= len(filtered_products):
+                    break
+                
+                product = filtered_products[product_idx]
+                
+                with col:
+                    # Title + description
+                    st.markdown(f"**{product.get('item_code', 'N/A')}**")
+                    st.caption(ellipsize(product.get('description', 'No description'), max_chars=50))
 
+                    # Image (URL or local path)
+                    img = product_image_src(product)
+                    if img and (img.startswith("http") or os.path.exists(img)):
+                        st.image(img, use_container_width=True)
+                    else:
+                        st.image("https://via.placeholder.com/150", use_container_width=True)
+
+                    # View details button
+                    if st.button("View Details", key=f"view_{product.get('item_code','')}_{product_idx}", use_container_width=True):
+                        pid = product.get('item_code', 'unknown').replace(' ', '_')
+                        # reset qty state for this product
+                        st.session_state.pop(f"qty_{pid}", None)
+                        st.session_state.pop(f"qty_input_{pid}", None)
+
+                        st.session_state.selected_product = product
+                        st.session_state.current_page = 'product_detail'
+                        st.rerun()
+            
+            # Add space between rows
+            if row_start + cols_per_row < len(filtered_products):
+                st.markdown("<br>", unsafe_allow_html=True)
+            
 def product_detail_page():
     """Dedicated product detail page with back navigation"""
     product = st.session_state.get('selected_product')
