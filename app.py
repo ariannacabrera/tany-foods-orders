@@ -191,6 +191,26 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# code to show 3 products per row in mobile 
+st.markdown("""
+<style>
+/* Force 3-up cards on mobile, only in the catalog grid */
+.catalog-grid [data-testid="stHorizontalBlock"] {
+  gap: 0.5rem !important;
+  flex-wrap: wrap !important;
+}
+@media (max-width: 768px) {
+  .catalog-grid [data-testid="column"] {
+    flex: 0 0 33.3333% !important;
+    width: 33.3333% !important;
+    padding-left: 0.25rem !important;
+    padding-right: 0.25rem !important;
+  }
+}
+</style>
+""", unsafe_allow_html=True)
+
+
 # helper to reduce space
 def ellipsize(text: str, max_chars: int = 28) -> str:
     text = str(text or "")
@@ -384,6 +404,8 @@ def product_catalog_page():
         st.info("No products found. Admin needs to upload product database.")
     else:
         # Display products in a 3-column grid
+        st.markdown('<div class="catalog-grid">', unsafe_allow_html=True) 
+        
         cols_per_row = 3
         for row_start in range(0, len(filtered_products), cols_per_row):
             cols = st.columns(cols_per_row)
@@ -428,6 +450,8 @@ def product_catalog_page():
             # Add space between rows
             if row_start + cols_per_row < len(filtered_products):
                 st.markdown("<br>", unsafe_allow_html=True)
+                
+        st.markdown('</div>', unsafe_allow_html=True)
             
 def product_detail_page():
     """Dedicated product detail page with back navigation"""
