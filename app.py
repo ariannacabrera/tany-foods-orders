@@ -160,7 +160,22 @@ def ellipsize(text: str, max_chars: int = 28) -> str:
 
 def product_image_src(p: dict) -> str:
     # Prefer Sheets direct URL; fall back to local path; handle missing keys safely
-    return (str(p.get("image_url") or p.get("image_path") or "")).strip()
+    url = (str(p.get("image_url") or p.get("image_path") or "")).strip()
+    
+    # Convert Google Drive export URLs to direct image URLs
+    if "drive.google.com" in url and "export=view" in url:
+        try:
+            # Extract the file ID from the URL
+            import re
+            match = re.search(r'[?&]id=([^&]+)', url)
+            if match:
+                file_id = match.group(1)
+                # Use thumbnail endpoint for reliable image display
+                return f"https://drive.google.com/thumbnail?id={file_id}&sz=w800"
+        except Exception:
+            pass
+    
+    return url
 
 # Admin credentials (hardcoded - in production, use environment variables)
 ADMIN_USERNAME = "admin"
