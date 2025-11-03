@@ -341,7 +341,7 @@ def product_catalog_page():
     if selected_category != "All":
         filtered_products = [p for p in filtered_products if p.get('category') == selected_category]
 
-# --- Render products ---
+    # --- Render products ---
     if not filtered_products:
         st.info("No products found. Admin needs to upload product database.")
     else:
